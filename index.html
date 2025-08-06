@@ -5,6 +5,7 @@
   Để phù hợp với kiến trúc của dự án gốc, trang này sử dụng Firebase Authentication
   và Firestore. Sau khi đăng nhập với tài khoản quản trị, bảng danh sách người dùng
   sẽ được tải từ Firestore và hiển thị cùng với tuỳ chọn nạp thêm năng lượng.
+  Chức năng trừ năng lượng được bổ sung với một nút "Trừ" nằm cạnh nút "Nạp".
   Bạn có thể sửa đổi hoặc mở rộng file này tùy theo nhu cầu.
 -->
 <!DOCTYPE html>
@@ -77,11 +78,6 @@
             }, 4000);
         }
 
-        /**
-         * Sau khi đăng nhập, tải danh sách người dùng từ Firestore.
-         * Mỗi người dùng được hiển thị theo hàng trong bảng với nút
-         * để nạp thêm năng lượng cho họ.
-         */
         /**
          * Tải danh sách người dùng từ Firestore. Nếu truyền tham số filterUsername,
          * chỉ hiển thị những người dùng có tên chứa chuỗi đó (không phân biệt hoa thường).
@@ -172,15 +168,19 @@
                     };
                     levelTd.appendChild(levelSelect);
                     levelTd.className = 'px-2 py-1';
-                    // Cột nhập số năng lượng cần nạp
+                    // Cột nhập số năng lượng cần nạp hoặc trừ
                     const inputTd = document.createElement('td');
                     const energyInput = document.createElement('input');
                     energyInput.type = 'number';
                     energyInput.min = '0';
                     energyInput.className = 'w-20 bg-gray-800 text-white border border-gray-600 rounded px-1';
                     inputTd.appendChild(energyInput);
-                    // Nút cập nhật
+                    // Cột hành động với nút nạp và trừ năng lượng
                     const actionTd = document.createElement('td');
+                    // Chứa hai nút, sử dụng flex để canh ngang
+                    const actionWrapper = document.createElement('div');
+                    actionWrapper.className = 'flex space-x-2';
+                    // Nút nạp
                     const addButton = document.createElement('button');
                     addButton.textContent = 'Nạp';
                     addButton.className = 'bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-1 rounded';
@@ -204,7 +204,39 @@
                             showToast('Không thể cập nhật năng lượng. Kiểm tra lại quyền hoặc mạng.', 'error');
                         }
                     };
-                    actionTd.appendChild(addButton);
+                    actionWrapper.appendChild(addButton);
+                    // Nút trừ năng lượng
+                    const subtractButton = document.createElement('button');
+                    subtractButton.textContent = 'Trừ';
+                    subtractButton.className = 'bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded';
+                    subtractButton.onclick = async () => {
+                        const value = parseInt(energyInput.value);
+                        if (isNaN(value) || value <= 0) {
+                            showToast('Vui lòng nhập số năng lượng hợp lệ.', 'error');
+                            return;
+                        }
+                        // Nếu năng lượng hiện tại không đủ
+                        const currentEnergy = data.energy ?? 0;
+                        if (currentEnergy - value < 0) {
+                            showToast('Không đủ năng lượng để trừ.', 'error');
+                            return;
+                        }
+                        try {
+                            await updateDoc(doc(db, 'users', docSnap.id), {
+                                energy: currentEnergy - value
+                            });
+                            showToast(`Đã trừ ${value} năng lượng của ${data.username}.`, 'success');
+                            // Cập nhật cột năng lượng trong bảng
+                            data.energy = currentEnergy - value;
+                            energyTd.textContent = data.energy;
+                            energyInput.value = '';
+                        } catch (err) {
+                            console.error(err);
+                            showToast('Không thể cập nhật năng lượng. Kiểm tra lại quyền hoặc mạng.', 'error');
+                        }
+                    };
+                    actionWrapper.appendChild(subtractButton);
+                    actionTd.appendChild(actionWrapper);
                     actionTd.className = 'px-2 py-1';
                     tr.appendChild(uidTd);
                     tr.appendChild(nameTd);
@@ -432,7 +464,7 @@
                             <th class="px-2 py-1">Năng lượng</th>
                             <!-- Cột cấp bậc người dùng (THƯỜNG / VIP / PREMIUM) -->
                             <th class="px-2 py-1">Cấp</th>
-                            <th class="px-2 py-1">Nạp thêm</th>
+                            <th class="px-2 py-1">Nạp/Trừ</th>
                             <th class="px-2 py-1">Hành động</th>
                         </tr>
                     </thead>
