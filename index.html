@@ -144,12 +144,22 @@
                                 return '#00ffff'; // cyan cho thường
                         }
                     };
-                    // Đặt màu chữ ban đầu
-                    levelSelect.style.color = getLevelColor(levelSelect.value);
+                    // Đặt màu chữ và hiệu ứng ban đầu cho ô chọn
+                    {
+                        const initColor = getLevelColor(levelSelect.value);
+                        levelSelect.style.color = initColor;
+                        levelSelect.style.borderColor = initColor;
+                        levelSelect.style.boxShadow = `0 0 6px ${initColor}`;
+                        levelSelect.style.fontWeight = '700';
+                    }
                     // Khi thay đổi cấp bậc, cập nhật Firestore và thay đổi màu chữ
                     levelSelect.onchange = async () => {
                         const newLevel = levelSelect.value;
-                        levelSelect.style.color = getLevelColor(newLevel);
+                        const newColor = getLevelColor(newLevel);
+                        // Cập nhật màu chữ và hiệu ứng viền cho cấp bậc mới
+                        levelSelect.style.color = newColor;
+                        levelSelect.style.borderColor = newColor;
+                        levelSelect.style.boxShadow = `0 0 6px ${newColor}`;
                         try {
                             await updateDoc(doc(db, 'users', docSnap.id), { level: newLevel });
                             showToast(`Đã cập nhật cấp bậc cho ${data.username} thành ${newLevel.toUpperCase()}.`, 'success');
