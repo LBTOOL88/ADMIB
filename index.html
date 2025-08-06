@@ -114,6 +114,54 @@
                     const energyTd = document.createElement('td');
                     energyTd.textContent = data.energy ?? 0;
                     energyTd.className = 'px-2 py-1';
+
+                    // Cột cấp bậc (THƯỜNG / VIP / PREMIUM)
+                    const levelTd = document.createElement('td');
+                    const levelSelect = document.createElement('select');
+                    // Use a wider width for readability
+                    levelSelect.className = 'w-28 bg-gray-800 text-white border border-gray-600 rounded px-1';
+                    const levels = [
+                        { value: 'normal', label: 'THƯỜNG' },
+                        { value: 'vip', label: 'VIP' },
+                        { value: 'premium', label: 'PREMIUM' }
+                    ];
+                    levels.forEach(({ value, label }) => {
+                        const opt = document.createElement('option');
+                        opt.value = value;
+                        opt.textContent = label;
+                        levelSelect.appendChild(opt);
+                    });
+                    // Nếu chưa có trường cấp bậc thì mặc định là 'normal'
+                    levelSelect.value = data.level || 'normal';
+                    // Hàm trả về màu tương ứng với cấp bậc
+                    const getLevelColor = (level) => {
+                        switch (level) {
+                            case 'vip':
+                                return '#FFD700'; // vàng cho VIP
+                            case 'premium':
+                                return '#ff00ff'; // tím hồng cho PREMIUM
+                            default:
+                                return '#00ffff'; // cyan cho thường
+                        }
+                    };
+                    // Đặt màu chữ ban đầu
+                    levelSelect.style.color = getLevelColor(levelSelect.value);
+                    // Khi thay đổi cấp bậc, cập nhật Firestore và thay đổi màu chữ
+                    levelSelect.onchange = async () => {
+                        const newLevel = levelSelect.value;
+                        levelSelect.style.color = getLevelColor(newLevel);
+                        try {
+                            await updateDoc(doc(db, 'users', docSnap.id), { level: newLevel });
+                            showToast(`Đã cập nhật cấp bậc cho ${data.username} thành ${newLevel.toUpperCase()}.`, 'success');
+                            // Cập nhật dữ liệu trong bộ nhớ tạm của bảng
+                            data.level = newLevel;
+                        } catch (err) {
+                            console.error(err);
+                            showToast('Không thể cập nhật cấp bậc.', 'error');
+                        }
+                    };
+                    levelTd.appendChild(levelSelect);
+                    levelTd.className = 'px-2 py-1';
                     // Cột nhập số năng lượng cần nạp
                     const inputTd = document.createElement('td');
                     const energyInput = document.createElement('input');
@@ -152,6 +200,8 @@
                     tr.appendChild(nameTd);
                     tr.appendChild(phoneTd);
                     tr.appendChild(energyTd);
+                    // Thêm cột cấp bậc vào sau năng lượng
+                    tr.appendChild(levelTd);
                     tr.appendChild(inputTd);
                     tr.appendChild(actionTd);
                     userTableBody.appendChild(tr);
@@ -197,6 +247,8 @@
                             username: newUsername,
                             phoneNumber: '',
                             energy: CONFIG.energy.initial,
+                            // Mặc định cấp bậc là thường khi tạo mới
+                            level: 'normal',
                             createdAt: serverTimestamp(),
                             avatarUrl: '',
                             f168Username: '',
@@ -250,6 +302,8 @@
                     username: newUsername,
                     phoneNumber: newPhone,
                     energy: isNaN(newEnergy) ? CONFIG.energy.initial : newEnergy,
+                    // Khi tạo tài khoản mới ở trang quản trị, gán cấp bậc mặc định
+                    level: 'normal',
                     createdAt: serverTimestamp(),
                     avatarUrl: '',
                     f168Username: '',
@@ -366,6 +420,8 @@
                             <th class="px-2 py-1">Tên</th>
                             <th class="px-2 py-1">SĐT</th>
                             <th class="px-2 py-1">Năng lượng</th>
+                            <!-- Cột cấp bậc người dùng (THƯỜNG / VIP / PREMIUM) -->
+                            <th class="px-2 py-1">Cấp</th>
                             <th class="px-2 py-1">Nạp thêm</th>
                             <th class="px-2 py-1">Hành động</th>
                         </tr>
