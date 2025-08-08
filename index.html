@@ -111,7 +111,7 @@
                     energyTd.textContent = data.energy ?? 0;
                     energyTd.className = 'px-2 py-1';
 
-                    // Cột cấp bậc (THƯỜNG / VIP / PREMIUM)
+                    // Cột cấp bậc (THƯỜNG / VIP / V-VIP / PREMIUM / OMEGA)
                     const levelTd = document.createElement('td');
                     const levelSelect = document.createElement('select');
                     // Use a wider width for readability
@@ -119,7 +119,9 @@
                     const levels = [
                         { value: 'normal', label: 'THƯỜNG' },
                         { value: 'vip', label: 'VIP' },
-                        { value: 'premium', label: 'PREMIUM' }
+                        { value: 'v-vip', label: 'V-VIP' },
+                        { value: 'premium', label: 'PREMIUM' },
+                        { value: 'omega', label: 'OMEGA' }
                     ];
                     levels.forEach(({ value, label }) => {
                         const opt = document.createElement('option');
@@ -134,10 +136,14 @@
                         switch (level) {
                             case 'vip':
                                 return '#FFD700'; // vàng cho VIP
+                            case 'v-vip':
+                                return '#FF4500'; // cam/đỏ cho V-VIP
                             case 'premium':
                                 return '#ff00ff'; // tím hồng cho PREMIUM
+                            case 'omega':
+                                return '#00FF00'; // xanh lá cho OMEGA
                             default:
-                                return '#00ffff'; // cyan cho thường
+                                return '#00ffff'; // cyan cho THƯỜNG
                         }
                     };
                     // Đặt màu chữ và hiệu ứng ban đầu cho ô chọn
@@ -462,7 +468,7 @@
                             <th class="px-2 py-1">Tên</th>
                             <th class="px-2 py-1">SĐT</th>
                             <th class="px-2 py-1">Năng lượng</th>
-                            <!-- Cột cấp bậc người dùng (THƯỜNG / VIP / PREMIUM) -->
+                            <!-- Cột cấp bậc người dùng (THƯỜNG / VIP / V-VIP / PREMIUM / OMEGA) -->
                             <th class="px-2 py-1">Cấp</th>
                             <th class="px-2 py-1">Nạp/Trừ</th>
                             <th class="px-2 py-1">Hành động</th>
